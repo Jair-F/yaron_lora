@@ -1,15 +1,22 @@
 
+## Trigger Pins
+| Module Pin | Arduino Uno / Nano Pin | Notes |
+| --- | --- | --- |
+| **CONN STATUS** | Pin `4` | LED if connected to the second LORA Module |
+| **BTN** | Pin `5` | Fire Button Pin |
+| **TRIG** | Pin `13` | Fire Trigger Pin |
+
 ## Wiring Guide - DX-PJ27-V1.2 LoRa Module
 
 ### Uno/Nano
 | Module Pin | Arduino Uno / Nano Pin | Notes |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **VCC** | `3.3V` or `5V` | Check your exact baseboard supply voltage specification |
 | **GND** | `GND` | Ground connection |
 | **MOSI** | Pin `11` | SPI Master Out Slave In |
 | **MISO** | Pin `12` | SPI Master In Slave Out |
 | **SCK** | Pin `13` | SPI Serial Clock |
-| **NSS / CS**| Pin `10` | SPI Chip Select |
+| **NSS / CS** | Pin `10` | SPI Chip Select |
 | **RST** | Pin `9` | Hardware Reset |
 | **DIO1** | Pin `2` | Digital I/O 1 (Interrupt pin) |
 | **BUSY** | Pin `3` | Busy Status indicator pin |
@@ -40,3 +47,7 @@
 | **RST** | Pin `9` | Hardware Reset (Can be any digital pin) |
 | **DIO1** | Pin `2` | Digital I/O 1 (Hardware Interrupt pin) |
 | **BUSY** | Pin `3` | Busy Status indicator pin |
+
+
+### Uploader and linux udev rules:
+[Using The Teensy Loader on Ubuntu Linux](https://www.pjrc.com/teensy/loader_linux.html)
