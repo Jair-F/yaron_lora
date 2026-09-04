@@ -30,7 +30,14 @@ bool receiver_loop(SX1262& lora) {
         }
 
         delay(100);
-        if (!send(lora, receiver_auth_key)) {
+        String send_msg = "";
+        if (button_pressed()) {
+            send_msg = receiver_auth_key + fire_cmd;
+        }
+        else {
+            send_msg = sender_auth_key;
+        }
+        if (!send(lora, send_msg)) {
             Serial.println("Failed to send response");
         }
     } else {

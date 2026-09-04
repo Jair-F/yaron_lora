@@ -29,13 +29,15 @@ bool senderLoop(SX1262& lora) {
         continue;
     }
 
-    String receivedStr = recv_data(lora);
+    String received_str = recv_data(lora);
 
-    if (receivedStr.startsWith(receiver_auth_key)) {
+    if (received_str.startsWith(receiver_auth_key)) {
         Serial.print('.');
         print_module_packet_metadata(lora);
 
-        if(receivedStr.endsWith(fire_cmd)) {
+        Serial.print("received: ");
+        Serial.println(received_str);
+        if(received_str.endsWith(fire_cmd)) {
             fire();
         }
     } else {

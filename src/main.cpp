@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <RadioLib.h>
 
-#define IS_SENDER
+// #define IS_SENDER
 
 #ifdef IS_SENDER
 #include "sender.hpp"
