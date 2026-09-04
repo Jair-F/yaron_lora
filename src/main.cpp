@@ -62,7 +62,7 @@ void setupLora() {
     }
 }
 
-bool loarReadyToInteract() {
+bool packetInRcvBuff() {
     return digitalRead(PIN_DIO1) == HIGH;
 }
 
@@ -79,32 +79,28 @@ bool send(const String& data_str) {
 }
 
 void handleSender(String& receivedStr) {
+    Serial.println(F("\n[Sender] Sending next: Hi"));
+    lastActionTime = millis();
+    if (!send("Hi")) {
+        Serial.println(F("Transmission failed"));
+    }
+
     // FIX: Evaluate received data first before modifying transceiver state!
     if (receivedStr == "Bye") {
         Serial.print('.'); // Success indicator
-        delay(2000);       // Pacing delay before launching next message
-        
-        Serial.println(F("\n[Sender] Sending next: Hi"));
-        if (!send("Hi")) {
-            Serial.println(F("Transmission failed"));
-        }
-        lastActionTime = millis();
     } else {
         Serial.print('#'); // Malformed/Unexpected text indicator
     }
 }
 
 void handleReceiver(String& receivedStr) {
-    // FIX: Evaluate received data first before reacting
+    if (!send("Bye")) {
+        Serial.println(F("Transmission failed"));
+    }
+    lastActionTime = millis();
+
     if (receivedStr == "Hi") {
         Serial.print('.'); // Success indicator
-        delay(500);        // Minor processing offset window 
-        
-        Serial.println(F("\n[Receiver] Sending reply: Bye"));
-        if (!send("Bye")) {
-            Serial.println(F("Transmission failed"));
-        }
-        lastActionTime = millis();
     } else {
         Serial.print('#');
     }
@@ -122,6 +118,9 @@ void resetLoraIfTimedOut() {
 }
 
 String recvData() {
+    if (!packetInRcvBuff()) {
+        return "";
+    }
     String receivedStr;
     int state = lora.readData(receivedStr);
 
@@ -149,15 +148,12 @@ void sendAndRcvCycle() {
 
     // Check string length to bypass empty noise glitches safely
     if (receivedStr.length() > 0) {
-        if (IS_SENDER_NODE) {
-            handleSender(receivedStr);
-        } else {
-            handleReceiver(receivedStr);
-        }
     }
-    
-    // Explicitly reset chip back into continuous scanning mode
-    lora.startReceive();
+    if (IS_SENDER_NODE) {
+        handleSender(receivedStr);
+    } else {
+        handleReceiver(receivedStr);
+    }
 }
 
 void setup() {
@@ -170,10 +166,9 @@ void setup() {
 
 void loop() {
     resetLoraIfTimedOut();
-    
-    if (!loarReadyToInteract()) {
-        return;
-    }
 
     sendAndRcvCycle();
+
+    // put back in recv mode to listen for packets
+    lora.startReceive();
 }
