@@ -3,8 +3,7 @@
 
 # include "utils.hpp"
 
-// Send msg and wait for this much time for an response.
-const unsigned long PERIOD_MS = 5000;
+const unsigned long TIMEOUT_MS = 5000;
 
 bool senderLoop(SX1262& lora) {
     auto start = millis();
@@ -15,7 +14,7 @@ bool senderLoop(SX1262& lora) {
     delay(100);
     lora.startReceive();
 
-    while (!packet_in_rcv_buff() && (millis() - start) < PERIOD_MS) {
+    while (!packet_in_rcv_buff() && (millis() - start) < TIMEOUT_MS) {
         continue;
     }
 
