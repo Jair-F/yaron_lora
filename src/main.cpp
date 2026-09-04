@@ -6,7 +6,7 @@
 // ============================================================================
 // Set to true for Device 1 (Sends "Hi", waits for "Bye")
 // Set to false for Device 2 (Waits for "Hi", replies with "Bye")
-const bool IS_SENDER_NODE = false; 
+const bool IS_SENDER_NODE = true; 
 
 // ============================================================================
 // BOARD SELECTION (Uncomment ONLY ONE matching your current target board)
@@ -18,11 +18,11 @@ const bool IS_SENDER_NODE = false;
 
 // --- CONFIG 2: Arduino Mega 2560 ---
 // NSS: 10, DIO1: 2, NRST: 9, BUSY: 3
-// SX1262 lora = new Module(10, 2, 9, 3);
+SX1262 lora = new Module(10, 2, 9, 3);
 
 // --- CONFIG 3: Teensy 4.1 ---
 // NSS: 10, DIO1: 2, NRST: 9, BUSY: 3
-SX1262 lora = new Module(10, 2, 9, 3);
+// SX1262 lora = new Module(10, 2, 9, 3);
 
 // Active pin definition tracking for the noise guard logic
 const int PIN_DIO1 = 2; 
@@ -74,71 +74,36 @@ void printModulePacketMetadata(SX1262& lora) {
     Serial.println(F(" dB"));
 }
 
-
-void setup() {
-    Serial.begin(9600);
-    while (!Serial);
-
-    setupLora();
-    lastActionTime = millis();
+void handleSender(String& receivedStr) {
+    if (receivedStr == "Bye") {
+        Serial.println(F("[Success] Handshake completed successfully!"));
+        delay(2000); // Wait 2 seconds before starting the message cycle over
+        
+        Serial.println(F("[SX1262] Transmitting: Hi"));
+        int txState = lora.transmit("Hi");
+        if (txState != RADIOLIB_ERR_NONE) {
+            Serial.print(F("Transmission failed, code "));
+            Serial.println(txState);
+        }
+        lastActionTime = millis();
+    }
 }
 
-
-void loop() {
-    // SPAM PREVENTER GUARD: Only interact with the library if DIO1 is actively driven HIGH
-    if (loarReadyToInteract()) {
-        String receivedStr;
+void handleReceiver(String& receivedStr) {
+    if (receivedStr == "Hi") {
+        delay(500); // Brief delay to let the sender node open its listening window
+        Serial.println(F("[SX1262] Transmitting response: Bye"));
         
-        // Check and read packet details from internal hardware buffer
-        int state = lora.readData(receivedStr);
-        
-        if (state == RADIOLIB_ERR_NONE) {
-            // Secondary filter to ensure no empty/corrupted noise slices make it past
-            if (receivedStr.length() > 0) {
-                Serial.print(F("[SX1262] Valid packet received! Data: \""));
-                Serial.print(receivedStr);
-                printModulePacketMetadata(lora);
-                
-                // --- SENDER NODE LOGIC ---
-                if (IS_SENDER_NODE) {
-                    if (receivedStr == "Bye") {
-                        Serial.println(F("[Success] Handshake completed successfully!"));
-                        delay(2000); // Wait 2 seconds before starting the message cycle over
-                        
-                        Serial.println(F("[SX1262] Transmitting: Hi"));
-                        int txState = lora.transmit("Hi");
-                        if (txState != RADIOLIB_ERR_NONE) {
-                            Serial.print(F("Transmission failed, code "));
-                            Serial.println(txState);
-                        }
-                        lastActionTime = millis();
-                    }
-                } 
-                // --- RECEIVER NODE LOGIC ---
-                else {
-                    if (receivedStr == "Hi") {
-                        delay(500); // Brief delay to let the sender node open its listening window
-                        Serial.println(F("[SX1262] Transmitting response: Bye"));
-                        
-                        int txState = lora.transmit("Bye");
-                        if (txState != RADIOLIB_ERR_NONE) {
-                            Serial.print(F("Transmission failed, code "));
-                            Serial.println(txState);
-                        }
-                        lastActionTime = millis();
-                    }
-                }
-            }
-        } 
-        else if (state != RADIOLIB_ERR_RX_TIMEOUT) {
-            Serial.print(F("Receive logic encountered error: "));
-            Serial.println(state);
+        int txState = lora.transmit("Bye");
+        if (txState != RADIOLIB_ERR_NONE) {
+            Serial.print(F("Transmission failed, code "));
+            Serial.println(txState);
         }
-        
-        // Always reset the receiver window state and clear register interrupt bits
-        lora.startReceive();
+        lastActionTime = millis();
     }
-    
+}
+
+void resetLoraIfTimedOut() {
     // --- TIMEOUT KICKSTART LOGIC ---
     if (IS_SENDER_NODE && (millis() - lastActionTime > TIMEOUT_MS)) {
         Serial.println(F("[Timeout] Silence detected. Initiating handshake..."));
@@ -155,4 +120,53 @@ void loop() {
         lora.startReceive();
         lastActionTime = millis();
     }
+}
+
+void sendAndRcvCycle() {
+    String receivedStr;
+
+    // Check and read packet details from internal hardware buffer
+    int state = lora.readData(receivedStr);
+
+    if (state == RADIOLIB_ERR_NONE) {
+        // Secondary filter to ensure no empty/corrupted noise slices make it past
+        if (receivedStr.length() > 0) {
+            Serial.print(F("[SX1262] Valid packet received! Data: \""));
+            Serial.print(receivedStr);
+            printModulePacketMetadata(lora);
+            
+            if (IS_SENDER_NODE) {
+                handleSender(receivedStr);
+            } 
+            else {
+                handleReceiver(receivedStr);
+            }
+        }
+    } 
+    else if (state != RADIOLIB_ERR_RX_TIMEOUT) {
+        Serial.print(F("Receive logic encountered error: "));
+        Serial.println(state);
+    }
+    
+    // Always reset the receiver window state and clear register interrupt bits
+    lora.startReceive();
+}
+
+void setup() {
+    Serial.begin(9600);
+    while (!Serial);
+
+    setupLora();
+    lastActionTime = millis();
+}
+
+void loop() {
+    resetLoraIfTimedOut();
+    
+    // SPAM PREVENTER GUARD: Only interact with the library if DIO1 is actively driven HIGH
+    if (!loarReadyToInteract()) {
+        return;
+    }
+
+    sendAndRcvCycle();
 }
