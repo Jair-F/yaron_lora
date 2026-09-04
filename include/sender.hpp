@@ -9,17 +9,7 @@ const unsigned long PERIOD_MS = 5000;
 bool senderLoop(SX1262& lora) {
     auto start = millis();
 
-    String send_msg = "";
-    if (button_pressed()) {
-        send_msg = sender_auth_key + fire_cmd;
-    }
-    else {
-        send_msg = sender_auth_key;
-    }
-
-    Serial.print("sending: ");
-    Serial.println(send_msg);
-    if (!send(lora, send_msg)) {
+    if (!send(lora, button_pressed() ? sender_auth_key + fire_cmd : sender_auth_key)) {
         Serial.println("Failed to send Hi");
     }
     delay(100);
@@ -30,22 +20,20 @@ bool senderLoop(SX1262& lora) {
     }
 
     String received_str = recv_data(lora);
+    // Serial.println("received msg: \"" + received_str + "\"");
+    // print_module_packet_metadata(lora);
+
 
     if (received_str.startsWith(receiver_auth_key)) {
         Serial.print('.');
-        print_module_packet_metadata(lora);
 
-        Serial.print("received: ");
-        Serial.println(received_str);
         if(received_str.endsWith(fire_cmd)) {
             fire();
         }
     } else {
         Serial.print('#');
+        return false;
     }
-
-    // long remaining_sleep = PERIOD_MS - (millis() - start);
-    // delay(max(0, remaining_sleep));
 
     return true;
 }

@@ -8,36 +8,27 @@ bool receiver_loop(SX1262& lora) {
         return false;
     }
 
-    String receivedStr = recv_data(lora);
+    String received_str = recv_data(lora);
     
-    if (receivedStr.length() == 0) {
+    if (received_str.length() == 0) {
         lora.startReceive();
         return false;
     }
 
-    Serial.print("received msg: \"");
-    Serial.println(receivedStr + '\"');
-
+    // Serial.println("received msg: \"" + received_str + "\"");
+    // print_module_packet_metadata(lora);
     bool ret = false;
 
-    if (receivedStr.startsWith(sender_auth_key)) {
+    if (received_str.startsWith(sender_auth_key)) {
         ret = true;
         Serial.print('.');
-        print_module_packet_metadata(lora);
 
-        if (receivedStr.endsWith(fire_cmd)) {
+        if (received_str.endsWith(fire_cmd)) {
             fire();
         }
 
         delay(100);
-        String send_msg = "";
-        if (button_pressed()) {
-            send_msg = receiver_auth_key + fire_cmd;
-        }
-        else {
-            send_msg = sender_auth_key;
-        }
-        if (!send(lora, send_msg)) {
+        if (!send(lora, button_pressed() ? receiver_auth_key + fire_cmd  : receiver_auth_key)) {
             Serial.println("Failed to send response");
         }
     } else {
