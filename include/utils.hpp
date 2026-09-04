@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include <RadioLib.h>
 
-const int PIN_DIO1 = 2; 
+const int PIN_DIO1 = 2;
+const String sender_auth_key = "XO*@#*SJ9";
+const String receiver_auth_key = "WOK*($@43^";
 
 bool packetInRcvBuff() {
     return digitalRead(PIN_DIO1) == HIGH;

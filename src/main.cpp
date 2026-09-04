@@ -9,10 +9,8 @@
 #include "receiver.hpp"
 #endif
 
-const String authKey = "k��,�ˍI�";
-
 // ============================================================================
-// ROLE & TIMING SELECTION 
+// ROLE & TIMING SELECTION
 // ============================================================================
 const bool IS_SENDER_NODE = true;
 
@@ -45,6 +43,9 @@ void loop() {
     #ifdef IS_SENDER
     senderLoop(lora);
     #else
-    receiverLoop(lora);
+    if (!receiverLoop(lora)) {
+        Serial.print(F("#"));
+        delay(3000);
+    }
     #endif
 }

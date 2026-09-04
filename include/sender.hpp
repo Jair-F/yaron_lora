@@ -3,37 +3,33 @@
 
 # include "utils.hpp"
 
-// The fixed interval (in milliseconds) at which the Sender drops a "Hi" message
-const unsigned long PERIOD_MS = 3000;
+// Send msg and wait for this much time for an response.
+const unsigned long PERIOD_MS = 5000;
 
-void senderLoop(SX1262& lora) {
+bool senderLoop(SX1262& lora) {
     auto start = millis();
 
-    if (!send(lora, "Hi")) {
+    if (!send(lora, sender_auth_key)) {
         Serial.println("Failed to send Hi");
     }
-    
-    // --- PACKET PROCESSING GUARD ---
+    delay(100);
+    lora.startReceive();
+
     while (!packetInRcvBuff() && (millis() - start) < PERIOD_MS) {
         continue;
     }
 
-
     String receivedStr = recvData(lora);
-    Serial.print("received packet: \"");
-    Serial.println(receivedStr + "\"");
 
-    if (receivedStr.length() > 0) {
-        if (receivedStr == "Bye") {
-            Serial.print('.');
-            printModulePacketMetadata(lora);
-        } else {
-            Serial.print('#');
-        }
+    if (receivedStr == receiver_auth_key) {
+        Serial.print('.');
+        printModulePacketMetadata(lora);
+    } else {
+        Serial.print('#');
     }
 
-    lora.startReceive(); // Return to listen mode to collect any reactive response
+    // long remaining_sleep = PERIOD_MS - (millis() - start);
+    // delay(max(0, remaining_sleep));
 
-    auto remaining_sleep = millis() - start;
-    delay(max(0, remaining_sleep));
+    return true;
 }
