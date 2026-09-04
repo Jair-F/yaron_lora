@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <RadioLib.h>
 
-// #define IS_SENDER
+#define IS_SENDER
 
 #ifdef IS_SENDER
 #include "sender.hpp"
@@ -34,16 +34,20 @@ void setup() {
     Serial.begin(9600);
     // while (!Serial);
 
+    pinMode(btn_pin, INPUT_PULLUP);
+    pinMode(trigger_out_pin, OUTPUT);
+    digitalWrite(trigger_out_pin, LOW);
+
     Serial.print(F("Device Role: "));
     Serial.println(IS_SENDER_NODE ? F("SENDER (Periodic)") : F("RECEIVER (Reactive)"));
-    setupLora(lora);
+    setup_lora(lora);
 }
 
 void loop() {
     #ifdef IS_SENDER
     senderLoop(lora);
     #else
-    if (!receiverLoop(lora)) {
+    if (!receiver_loop(lora)) {
         Serial.print(F("#"));
         delay(3000);
     }

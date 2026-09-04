@@ -3,12 +3,12 @@
 
 #include "utils.hpp"
 
-bool receiverLoop(SX1262& lora) {
-    if (!packetInRcvBuff()) {
+bool receiver_loop(SX1262& lora) {
+    if (!packet_in_rcv_buff()) {
         return false;
     }
 
-    String receivedStr = recvData(lora);
+    String receivedStr = recv_data(lora);
     
     if (receivedStr.length() == 0) {
         lora.startReceive();
@@ -20,10 +20,14 @@ bool receiverLoop(SX1262& lora) {
 
     bool ret = false;
 
-    if (receivedStr == sender_auth_key) {
+    if (receivedStr.startsWith(sender_auth_key)) {
         ret = true;
         Serial.print('.');
-        printModulePacketMetadata(lora);
+        print_module_packet_metadata(lora);
+
+        if (receivedStr.endsWith(fire_cmd)) {
+            fire();
+        }
 
         delay(100);
         if (!send(lora, receiver_auth_key)) {

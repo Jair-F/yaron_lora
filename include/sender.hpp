@@ -9,21 +9,35 @@ const unsigned long PERIOD_MS = 5000;
 bool senderLoop(SX1262& lora) {
     auto start = millis();
 
-    if (!send(lora, sender_auth_key)) {
+    String send_msg = "";
+    if (button_pressed()) {
+        send_msg = sender_auth_key + fire_cmd;
+    }
+    else {
+        send_msg = sender_auth_key;
+    }
+
+    Serial.print("sending: ");
+    Serial.println(send_msg);
+    if (!send(lora, send_msg)) {
         Serial.println("Failed to send Hi");
     }
     delay(100);
     lora.startReceive();
 
-    while (!packetInRcvBuff() && (millis() - start) < PERIOD_MS) {
+    while (!packet_in_rcv_buff() && (millis() - start) < PERIOD_MS) {
         continue;
     }
 
-    String receivedStr = recvData(lora);
+    String receivedStr = recv_data(lora);
 
-    if (receivedStr == receiver_auth_key) {
+    if (receivedStr.startsWith(receiver_auth_key)) {
         Serial.print('.');
-        printModulePacketMetadata(lora);
+        print_module_packet_metadata(lora);
+
+        if(receivedStr.endsWith(fire_cmd)) {
+            fire();
+        }
     } else {
         Serial.print('#');
     }
