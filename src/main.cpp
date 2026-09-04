@@ -6,7 +6,7 @@
 // ============================================================================
 // Set to true for Device 1 (Sends "Hi", waits for "Bye")
 // Set to false for Device 2 (Waits for "Hi", replies with "Bye")
-const bool IS_SENDER_NODE = true; 
+const bool IS_SENDER_NODE = false; 
 
 // ============================================================================
 // BOARD SELECTION (Uncomment ONLY ONE matching your current target board)
@@ -18,11 +18,11 @@ const bool IS_SENDER_NODE = true;
 
 // --- CONFIG 2: Arduino Mega 2560 ---
 // NSS: 10, DIO1: 2, NRST: 9, BUSY: 3
-SX1262 lora = new Module(10, 2, 9, 3);
+// SX1262 lora = new Module(10, 2, 9, 3);
 
 // --- CONFIG 3: Teensy 4.1 ---
 // NSS: 10, DIO1: 2, NRST: 9, BUSY: 3
-// SX1262 lora = new Module(10, 2, 9, 3);
+SX1262 lora = new Module(10, 2, 9, 3);
 
 // Active pin definition tracking for the noise guard logic
 const int PIN_DIO1 = 2; 
@@ -30,10 +30,10 @@ const int PIN_DIO1 = 2;
 // ============================================================================
 
 unsigned long lastActionTime = 0;
-const unsigned long TIMEOUT_MS = 6000; 
+// Increased timeout to allow long flight-time packets room to breathe
+const unsigned long TIMEOUT_MS = 12000; 
 
 void setupLora() {
-    // Configure the DIO1 hardware pin as an input
     pinMode(PIN_DIO1, INPUT);
     
     Serial.println(F("\n--- DX-PJ27 LoRa Hi/Bye Communication Node ---"));
@@ -79,79 +79,66 @@ bool send(const String& data_str) {
 }
 
 void handleSender(String& receivedStr) {
-    if (!send("Hi")) {
-        Serial.println(F("Transmission failed"));
-        return;
+    // FIX: Evaluate received data first before modifying transceiver state!
+    if (receivedStr == "Bye") {
+        Serial.print('.'); // Success indicator
+        delay(2000);       // Pacing delay before launching next message
+        
+        Serial.println(F("\n[Sender] Sending next: Hi"));
+        if (!send("Hi")) {
+            Serial.println(F("Transmission failed"));
+        }
+        lastActionTime = millis();
+    } else {
+        Serial.print('#'); // Malformed/Unexpected text indicator
     }
-
-    if (receivedStr == "Bye")
-    {
-        // Connected
-        Serial.print('.');
-    }
-    else
-    {
-        Serial.print('#');
-    }
-    lastActionTime = millis();
 }
 
 void handleReceiver(String& receivedStr) {
-    if (!send("Bye")) {
-        Serial.println(F("Transmission failed"));
-        return;
-    }
-
-    if (receivedStr == "Hi")
-    {
-        // Connected
-        Serial.print('.');
-    }
-    else
-    {
+    // FIX: Evaluate received data first before reacting
+    if (receivedStr == "Hi") {
+        Serial.print('.'); // Success indicator
+        delay(500);        // Minor processing offset window 
+        
+        Serial.println(F("\n[Receiver] Sending reply: Bye"));
+        if (!send("Bye")) {
+            Serial.println(F("Transmission failed"));
+        }
+        lastActionTime = millis();
+    } else {
         Serial.print('#');
     }
-    lastActionTime = millis();
 }
 
 void resetLoraIfTimedOut() {
-    // --- TIMEOUT KICKSTART LOGIC ---
     if (IS_SENDER_NODE && (millis() - lastActionTime > TIMEOUT_MS)) {
-        // Serial.println(F("[Timeout] Silence detected. Initiating handshake..."));
-        
-        Serial.println(F("Sending initial Hi"));
+        Serial.println(F("\n[Timeout] Initiating fresh handshake..."));
         if (!send("Hi")) {
-            Serial.print(F("Kickstart transmit failed, code "));
+            Serial.print(F("Kickstart transmit failed."));
         }
-        
         lora.startReceive();
         lastActionTime = millis();
     }
-    // Serial.println();
 }
 
 String recvData() {
     String receivedStr;
-
-    // Check and read packet details from internal hardware buffer
     int state = lora.readData(receivedStr);
 
     if (state == RADIOLIB_ERR_RX_TIMEOUT) {
         return "";
     }
 
-    if (state != RADIOLIB_ERR_RX_TIMEOUT && state != RADIOLIB_ERR_NONE) {
+    if (state != RADIOLIB_ERR_NONE) {
         Serial.print(F("Receive logic encountered error: "));
         Serial.println(state);
         return "";
     }
 
-    if (state == RADIOLIB_ERR_NONE) {
-        if (receivedStr.length() > 0) {
-            Serial.println("Data recvd: \"" + receivedStr + "\"");
-            printModulePacketMetadata(lora);
-            return receivedStr;
-        }
+    if (receivedStr.length() > 0) {
+        Serial.println("\nData recvd: \"" + receivedStr + "\"");
+        printModulePacketMetadata(lora);
+        return receivedStr;
     }
 
     return "";
@@ -160,14 +147,16 @@ String recvData() {
 void sendAndRcvCycle() {
     String receivedStr = recvData();
 
-    if (IS_SENDER_NODE) {
-        handleSender(receivedStr);
-    }
-    else {
-        handleReceiver(receivedStr);
+    // Check string length to bypass empty noise glitches safely
+    if (receivedStr.length() > 0) {
+        if (IS_SENDER_NODE) {
+            handleSender(receivedStr);
+        } else {
+            handleReceiver(receivedStr);
+        }
     }
     
-    // Always reset the receiver window state and clear register interrupt bits
+    // Explicitly reset chip back into continuous scanning mode
     lora.startReceive();
 }
 
@@ -182,7 +171,6 @@ void setup() {
 void loop() {
     resetLoraIfTimedOut();
     
-    // SPAM PREVENTER GUARD: Only interact with the library if DIO1 is actively driven HIGH
     if (!loarReadyToInteract()) {
         return;
     }
