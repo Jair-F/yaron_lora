@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <RadioLib.h>
 
-constexpr uint8_t connection_status_led = 13;
+constexpr uint8_t connection_status_led = 7;
 constexpr uint8_t btn_pin = 5;
 constexpr uint8_t trigger_out_pin = 4;
 constexpr uint8_t PIN_DIO1 = 2;

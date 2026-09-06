@@ -2,7 +2,7 @@
 ## Trigger Pins
 | Module Pin | Arduino Uno / Nano Pin | Notes |
 | --- | --- | --- |
-| **CONN STATUS** | Pin `13` | LED if connected to the second LORA Module |
+| **CONN STATUS** | Pin `7` | LED if connected to the second LORA Module |
 | **BTN** | Pin `5` | Fire Button Pin |
 | **TRIG** | Pin `4` | Fire Trigger Pin |
 
