@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <RadioLib.h>
 
-constexpr uint8_t connection_status_led = 4;
+constexpr uint8_t connection_status_led = 13;
 constexpr uint8_t btn_pin = 5;
-constexpr uint8_t trigger_out_pin = 13;
+constexpr uint8_t trigger_out_pin = 4;
 constexpr uint8_t PIN_DIO1 = 2;
 const String sender_auth_key = "XO*@#*SJ9";
 const String receiver_auth_key = "WOK*($@43^";

@@ -2,9 +2,9 @@
 ## Trigger Pins
 | Module Pin | Arduino Uno / Nano Pin | Notes |
 | --- | --- | --- |
-| **CONN STATUS** | Pin `4` | LED if connected to the second LORA Module |
+| **CONN STATUS** | Pin `13` | LED if connected to the second LORA Module |
 | **BTN** | Pin `5` | Fire Button Pin |
-| **TRIG** | Pin `13` | Fire Trigger Pin |
+| **TRIG** | Pin `4` | Fire Trigger Pin |
 
 ## Wiring Guide - DX-PJ27-V1.2 LoRa Module
 
