@@ -14,7 +14,7 @@ const bool IS_SENDER_NODE = true;
 
 SX1262 lora = new Module(10, 2, 9, 3);
 
-void btn_pressed() {
+void _btn_press_callback() {
     btn_state.trigger();
     Serial.println(F("triggered btn"));
 }
@@ -27,7 +27,7 @@ void setup() {
 
     #ifdef IS_SENDER
     pinMode(btn_pin, INPUT_PULLUP);
-    attachInterrupt(btn_pin, btn_pressed, FALLING);
+    attachInterrupt(btn_pin, _btn_press_callback, FALLING);
 
     for(uint8_t i = 0; i < 2; ++i) {
         digitalWrite(connection_status_led, HIGH);
