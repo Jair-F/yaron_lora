@@ -5,21 +5,22 @@
 
 const unsigned long TIMEOUT_MS = 5000;
 
+void _one_blink_cycle() {
+    digitalWrite(connection_status_led, LOW);
+    delay(250);
+    digitalWrite(connection_status_led, HIGH);
+    delay(250);
+}
+
 void blink_to_confirm_fire() {
     for(uint8_t i = 0; i < 4; i++) {
-        digitalWrite(connection_status_led, LOW);
-        delay(250);
-        digitalWrite(connection_status_led, HIGH);
-        delay(250);
+        _one_blink_cycle();
     }
 }
 
 void blink_to_confirm_release() {
-    for(uint8_t i = 0; i < 4; i++) {
-        digitalWrite(connection_status_led, LOW);
-        delay(250);
-        digitalWrite(connection_status_led, HIGH);
-        delay(250);
+    for(uint8_t i = 0; i < 2; i++) {
+        _one_blink_cycle();
     }
 }
 
