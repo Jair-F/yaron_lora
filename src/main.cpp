@@ -26,23 +26,30 @@ SX1262 lora = new Module(10, 2, 9, 3);
 // SX1262 lora = new Module(10, 2, 9, 3);
 // #endif
 
+void btn_pressed() {
+    btn_state.trigger();
+    Serial.println("triggered btn");
+}
 
 void setup() {
     Serial.begin(9600);
 
-    pinMode(trigger_out_pin, OUTPUT);
-    digitalWrite(trigger_out_pin, LOW);
-    pinMode(btn_pin, INPUT_PULLUP);
     pinMode(connection_status_led, OUTPUT);
     digitalWrite(connection_status_led, LOW);
 
     #ifdef IS_SENDER
+    pinMode(btn_pin, INPUT_PULLUP);
+    attachInterrupt(btn_pin, btn_pressed, FALLING);
+
     for(uint8_t i = 0; i < 2; ++i) {
         digitalWrite(connection_status_led, HIGH);
         delay(1000);
         digitalWrite(connection_status_led, LOW);
         delay(1000);
     }
+    #else
+    pinMode(trigger_out_pin, OUTPUT);
+    digitalWrite(trigger_out_pin, LOW);
     #endif
 
     Serial.print(F("Device Role: "));

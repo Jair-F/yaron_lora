@@ -1,27 +1,12 @@
+#pragma once
 #include <Arduino.h>
 #include <RadioLib.h>
+#include "globals.hpp"
 
-constexpr uint8_t connection_status_led = 7;
-constexpr uint8_t btn_pin = 5;
-constexpr uint8_t trigger_out_pin = 4;
-constexpr uint8_t PIN_DIO1 = 2;
-const String sender_auth_key = "XO*@#*SJ9";
-const String receiver_auth_key = "WOK*($@43^";
-const String fire_cmd = "_fire";
-
-bool button_pressed() {
-    bool state = digitalRead(btn_pin) == LOW;
-    if (state) {
-        Serial.println("triggered btn");
-    }
-    return state;
-}
 
 void fire() {
     Serial.println("firing...");
-    digitalWrite(trigger_out_pin, HIGH);
-    delay(1000);
-    digitalWrite(trigger_out_pin, LOW);
+    digitalWrite(trigger_out_pin, !digitalRead(trigger_out_pin));
 }
 
 bool packet_in_rcv_buff() {
