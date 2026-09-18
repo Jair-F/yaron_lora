@@ -6,7 +6,7 @@
 
 void fire() {
     Serial.println("firing...");
-    digitalWrite(trigger_out_pin, !digitalRead(trigger_out_pin));
+    digitalWrite(fire_pin, !digitalRead(fire_pin));
 }
 
 bool packet_in_rcv_buff() {

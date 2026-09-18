@@ -17,11 +17,11 @@ bool receiver_loop(SX1262& lora) {
 
     // Serial.println("received msg: \"" + received_str + "\"");
     // print_module_packet_metadata(lora);
-    bool ret = false;
-    bool fired_this_loop = false;
+    bool connected = false;
 
     if (received_str.startsWith(sender_auth_key)) {
-        ret = true;
+        bool fired_this_loop = false;
+        connected = true;
         Serial.print('.');
 
         if (received_str.endsWith(fire_cmd)) {
@@ -30,7 +30,7 @@ bool receiver_loop(SX1262& lora) {
         }
 
         delay(100);
-        String confrim_cmd = digitalRead(trigger_out_pin) ? confirm_fired : confirm_released;
+        String confrim_cmd = digitalRead(fire_pin) ? confirm_fired : confirm_released;
         String send_cmd = fired_this_loop ? receiver_auth_key + confrim_cmd  : receiver_auth_key;
 
         if (!send(lora, send_cmd)) {
@@ -41,5 +41,5 @@ bool receiver_loop(SX1262& lora) {
     }
 
     lora.startReceive();
-    return ret;
+    return connected;
 }

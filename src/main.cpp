@@ -48,8 +48,8 @@ void setup() {
         delay(1000);
     }
     #else
-    pinMode(trigger_out_pin, OUTPUT);
-    digitalWrite(trigger_out_pin, LOW);
+    pinMode(fire_pin, OUTPUT);
+    digitalWrite(fire_pin, LOW);
     #endif
 
     Serial.print(F("Device Role: "));
