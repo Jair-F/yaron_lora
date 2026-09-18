@@ -21,6 +21,8 @@
 | **DIO1** | Pin `2` | Digital I/O 1 (Interrupt pin) |
 | **BUSY** | Pin `3` | Busy Status indicator pin |
 
+On our set the **receiver** sides pin **NSS/CS is 7** instead of 10.
+
 ### Arduino Mega 2560
 | Module Pin | Arduino Mega 2560 Pin | Notes |
 | :--- | :--- | :--- |

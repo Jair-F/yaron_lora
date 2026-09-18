@@ -1,6 +1,6 @@
+#pragma once
 #include <Arduino.h>
 #include <RadioLib.h>
-
 #include "utils.hpp"
 
 bool receiver_loop(SX1262& lora) {
@@ -15,26 +15,36 @@ bool receiver_loop(SX1262& lora) {
         return false;
     }
 
-    // Serial.println("received msg: \"" + received_str + "\"");
+    // Serial.println("received msg: \"" + received_str + F("\""));
     // print_module_packet_metadata(lora);
-    bool ret = false;
+    bool connected = false;
 
     if (received_str.startsWith(sender_auth_key)) {
-        ret = true;
+        connected = true;
         Serial.print('.');
+
+        bool fired_this_loop = false;
 
         if (received_str.endsWith(fire_cmd)) {
             fire();
+            fired_this_loop = true;
         }
 
         delay(100);
-        if (!send(lora, button_pressed() ? receiver_auth_key + fire_cmd  : receiver_auth_key)) {
-            Serial.println("Failed to send response");
+        String response = receiver_auth_key;
+        if (fired_this_loop) {
+            String confrim_fired_state = digitalRead(fire_pin) ? confirm_fired : confirm_released;
+            response += confrim_fired_state;
         }
-    } else {
+
+        if (!send(lora, response)) {
+            Serial.println(F("Failed to send response"));
+        }
+    }
+    else {
         Serial.print('#');
     }
 
     lora.startReceive();
-    return ret;
+    return connected;
 }
