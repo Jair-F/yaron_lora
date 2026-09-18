@@ -5,7 +5,7 @@
 
 
 void fire() {
-    Serial.println("firing...");
+    Serial.println(F("firing..."));
     digitalWrite(fire_pin, !digitalRead(fire_pin));
 }
 

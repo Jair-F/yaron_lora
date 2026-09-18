@@ -25,9 +25,13 @@ void blink_to_confirm_release() {
 
 bool senderLoop(SX1262& lora) {
     auto start = millis();
+    String send_str = sender_auth_key;
+    if (btn_state.triggered()) {
+        send_str += fire_cmd;
+    }
 
-    if (!send(lora, btn_state.triggered() ? sender_auth_key + fire_cmd : sender_auth_key)) {
-        Serial.println("Failed to send Hi");
+    if (!send(lora, send_str)) {
+        Serial.println(F("Failed to send Hi"));
     }
     delay(100);
     lora.startReceive();

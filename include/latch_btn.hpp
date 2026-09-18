@@ -7,9 +7,6 @@ private:
     bool _state = false;
 
 public:
-    LatchButton() {
-    }
-
     void reset() {
         this->_state = false;
     }
@@ -17,7 +14,7 @@ public:
     void trigger() {
         this->_state = true;
     }
-    
+
     bool triggered() const {
         return this->_state;
     }

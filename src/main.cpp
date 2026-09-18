@@ -11,24 +11,12 @@
 
 const bool IS_SENDER_NODE = true;
 
-// Uno / Nano
-// NSS: 10, DIO1: 2, NRST: 9, BUSY: 3
+
 SX1262 lora = new Module(10, 2, 9, 3);
-
-// Mega 2560
-// NSS: 10, DIO1: 2, NRST: 9, BUSY: 3
-// #ifdef IS_SENDER
-// SX1262 lora = new Module(10, 2, 9, 3);
-// #else
-
-// // Teensy 4.1
-// // NSS: 10, DIO1: 2, NRST: 9, BUSY: 3
-// SX1262 lora = new Module(10, 2, 9, 3);
-// #endif
 
 void btn_pressed() {
     btn_state.trigger();
-    Serial.println("triggered btn");
+    Serial.println(F("triggered btn"));
 }
 
 void setup() {
@@ -64,8 +52,8 @@ void loop() {
     connection_status = senderLoop(lora);
     #else
     if (!receiver_loop(lora)) {
-        Serial.print(F("#"));
-        delay(3000);
+        Serial.print('#');
+        delay(100);
         connection_status = true;
     }
     #endif

@@ -15,14 +15,15 @@ bool receiver_loop(SX1262& lora) {
         return false;
     }
 
-    // Serial.println("received msg: \"" + received_str + "\"");
+    // Serial.println("received msg: \"" + received_str + F("\""));
     // print_module_packet_metadata(lora);
     bool connected = false;
 
     if (received_str.startsWith(sender_auth_key)) {
-        bool fired_this_loop = false;
         connected = true;
         Serial.print('.');
+
+        bool fired_this_loop = false;
 
         if (received_str.endsWith(fire_cmd)) {
             fire();
@@ -30,13 +31,17 @@ bool receiver_loop(SX1262& lora) {
         }
 
         delay(100);
-        String confrim_cmd = digitalRead(fire_pin) ? confirm_fired : confirm_released;
-        String send_cmd = fired_this_loop ? receiver_auth_key + confrim_cmd  : receiver_auth_key;
-
-        if (!send(lora, send_cmd)) {
-            Serial.println("Failed to send response");
+        String response = receiver_auth_key;
+        if (fired_this_loop) {
+            String confrim_fired_state = digitalRead(fire_pin) ? confirm_fired : confirm_released;
+            response += confrim_fired_state;
         }
-    } else {
+
+        if (!send(lora, response)) {
+            Serial.println(F("Failed to send response"));
+        }
+    }
+    else {
         Serial.print('#');
     }
 
